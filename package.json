@@ -26,6 +26,7 @@
     "postinstall": "yarn workspace @linkwarden/web run postinstall && patch-package"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "4.0.17",
     "dotenv-cli": "^8.0.0",
     "vitest": "^4.0.17"
   },

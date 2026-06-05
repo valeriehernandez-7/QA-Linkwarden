@@ -163,4 +163,68 @@ describe("postLink", () => {
         const created = vi.mocked(prisma.link.create).mock.calls[0][0];
         expect(created.data.description).toBe("El elefante Dante camina hacia delante");
     });
+
+    it("User prevent duplicates, link alredy exists", async () => {
+        setupPath();
+        vi.mocked(prisma.user.findUnique).mockResolvedValue({ id: mockUserId, preventDuplicateLinks: true } as any);
+        vi.mocked(prisma.link.findFirst).mockResolvedValue(mockCreatedLink as any);
+
+        const res = await postLink({ url: "https://github.com/valeriehernandez-7/QA-Linkwarden/blob/main/README.md", tags: [] }, mockUserId);
+
+        expect(res.status).toBe(409);
+        expect(res.response).toBe("Link already exists");
+        expect(prisma.link.create).not.toHaveBeenCalled();
+    })
+
+    it("User prevent duplicates, link does not exist", async () => {
+        setupPath();
+        vi.mocked(prisma.user.findUnique).mockResolvedValue({
+            id: mockUserId,
+            preventDuplicateLinks: true,
+        } as any);
+        vi.mocked(prisma.link.findFirst).mockResolvedValue(null);
+
+        const res = await postLink({ url: "https://github.com/valeriehernandez-7/QA-Linkwarden/blob/main/README.md", tags: [] }, mockUserId);
+
+        expect(res.status).toBe(200);
+        expect(prisma.link.findFirst).toHaveBeenCalledOnce();
+        expect(prisma.link.create).toHaveBeenCalledOnce();
+    });
+
+    it("User has reached link limit", async () => {
+        setupPath();
+        vi.mocked(hasPassedLimit).mockResolvedValue(true);
+
+        const res = await postLink({ url: "https://github.com/valeriehernandez-7/QA-Linkwarden/blob/main/README.md", tags: [] }, mockUserId);
+
+        expect(res.status).toBe(400);
+        expect(res.response).toBe("Your subscription has reached the maximum number of links allowed.");
+        expect(prisma.link.create).not.toHaveBeenCalled();
+    })
+
+    it("Detect JPEG image type", async () => {
+        setupPath();
+        vi.mocked(fetchTitleAndHeaders).mockResolvedValue({
+            title: "",
+            headers: new Headers({ "content-type": "image/jpeg" }),
+        });
+
+        await postLink({ url: "https://drive.google.com/file/d/1J2xjvTX-Xk5a4B4xFGpDJ45Cy6HInV9z/view?usp=sharing", tags: [] }, mockUserId);
+
+        const created = vi.mocked(prisma.link.create).mock.calls[0][0];
+        expect(created.data.type).toBe("image");
+    });
+
+    it("Detect PNG image type", async () => {
+        setupPath();
+        vi.mocked(fetchTitleAndHeaders).mockResolvedValue({
+            title: "",
+            headers: new Headers({ "content-type": "image/png" }),
+        });
+
+        await postLink({ url: "https://drive.google.com/file/d/1_3uD1pMz8Sago76oD39x47cjIJ89SfjT/view?usp=sharing", tags: [] }, mockUserId);
+
+        const created = vi.mocked(prisma.link.create).mock.calls[0][0];
+        expect(created.data.type).toBe("image");
+    });
 });

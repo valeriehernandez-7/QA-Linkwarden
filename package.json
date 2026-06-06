@@ -26,8 +26,12 @@
     "postinstall": "yarn workspace @linkwarden/web run postinstall && patch-package"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "4.0.17",
+    "@jest/globals": "^30.4.1",
+    "@types/jest": "^30.0.0",
+    "@vitest/coverage-v8": "^4.0.17",
     "dotenv-cli": "^8.0.0",
+    "node-mocks-http": "^1.17.2",
+    "ts-jest": "^29.4.11",
     "vitest": "^4.0.17"
   },
   "dependencies": {

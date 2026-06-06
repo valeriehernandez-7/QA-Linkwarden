@@ -1,13 +1,22 @@
 import { prisma } from "@linkwarden/prisma";
 import type { NextApiRequest, NextApiResponse } from "next";
 import bcrypt from "bcrypt";
-import { PostUserSchema } from "@linkwarden/lib/schemaValidation";
+import { z } from "zod";
 import isAuthenticatedRequest from "../../isAuthenticatedRequest";
 import { Subscription, User } from "@linkwarden/prisma/client";
 
 const emailEnabled =
   process.env.EMAIL_FROM && process.env.EMAIL_SERVER ? true : false;
 const stripeEnabled = process.env.STRIPE_SECRET_KEY ? true : false;
+
+const PostUserSchemaFixed = z.object({
+  name: z.string().trim().min(1).max(50).optional(),
+  password: z.string().min(8).max(2048).optional(),
+  email: z.string().trim().email().toLowerCase().optional(),
+  username: z.string().optional(),
+  invite: z.boolean().default(false),
+  acceptPromotionalEmails: z.boolean().default(false),
+});
 
 interface Data {
   response: string | object;
@@ -26,7 +35,7 @@ export default async function postUser(
     return { response: "Registration is disabled.", status: 400 };
   }
 
-  const dataValidation = PostUserSchema().safeParse(req.body);
+  const dataValidation = PostUserSchemaFixed.safeParse(req.body);
 
   if (!dataValidation.success) {
     return {

@@ -3,7 +3,7 @@ import { AccountSettings } from "@linkwarden/types/global";
 import bcrypt from "bcrypt";
 import { removeFile, createFile, createFolder } from "@linkwarden/filesystem";
 import sendChangeEmailVerificationRequest from "@/lib/api/sendChangeEmailVerificationRequest";
-import { i18n } from "next-i18next.config";
+import { i18n } from "@/next-i18next.config";
 import { UpdateUserSchema } from "@linkwarden/lib/schemaValidation";
 
 const emailEnabled =

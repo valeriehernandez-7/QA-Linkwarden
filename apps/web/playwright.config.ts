@@ -40,7 +40,7 @@ export default defineConfig({
     {
       name: "chromium dashboard",
       dependencies: ["setup dashboard"],
-      testMatch: "dashboard/*.spec.ts",
+      testMatch: "dashboard/**/*.spec.ts",
       use: { ...devices["Desktop Chrome"], storageState: STORAGE_STATE },
     },
     {

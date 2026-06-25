@@ -1,5 +1,5 @@
-import { test, expect } from "../../index";
-import { loginAs } from "../../helpers/auth";
+import { test, expect } from "../../../index";
+import { loginAs } from "../../../helpers/auth";
 
 /**
  * Módulo: Collections (COL)

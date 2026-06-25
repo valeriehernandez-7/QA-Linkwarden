@@ -2,35 +2,29 @@ import { test, expect } from "../../../index";
 import { loginAs } from "../../../helpers/auth";
 
 /**
- * Módulo: Collections (COL)
+ * Module: Collections (COL)
  * Endpoint: POST /api/v1/collections
- * Referencia: Proyecto - Avance 1/3, casos COL-001 a COL-004
+ * Covers: COL-001 to COL-004
  *
- * Autenticación:
- *  - qa-tester (owner): vía storageState (fixture `request`, ya autenticado).
- *  - username0 / username1 (miembros): vía loginAs(), que devuelve tanto el
- *    context autenticado como el userId REAL obtenido dinámicamente desde
- *    GET /api/v1/auth/session. Nunca se hardcodean IDs de usuario, porque
- *    cada base de datos/ambiente puede asignarles un id distinto.
+ * qa-tester (owner) is authenticated via storageState (the `request` fixture).
+ * username0 / username1 (members) are authenticated dynamically via loginAs(),
+ * which resolves their real userId through GET /api/v1/auth/session —
+ * never hardcoded, since ids differ across environments.
  */
 
 test.describe("Collections - POST /api/v1/collections", () => {
-  // Acumula los IDs de colecciones creadas en cada test para limpiarlas después.
-  // Esto evita que la base de datos acumule colecciones "fantasma" entre
-  // corridas sucesivas de la suite, sin depender de un docker compose down -v
-  // antes de cada ejecución.
+  // Tracks ids created in each test so they can be cleaned up afterwards,
+  // keeping the suite idempotent across repeated runs.
   let createdIds: number[] = [];
 
   test.afterEach(async ({ request }) => {
     for (const id of createdIds) {
-      // Se ignoran errores de limpieza (ej. si el test falló antes de crear
-      // el recurso, o si ya fue borrado dentro del propio test).
-      await request.delete(`/api/v1/collections/${id}`).catch(() => {});
+      await request.delete(`/api/v1/collections/${id}`).catch(() => { });
     }
     createdIds = [];
   });
 
-  test("COL-001 (DV): crea una colección raíz con solo el nombre", async ({
+  test("COL-001 (DV): creates a root collection with only a name", async ({
     request,
   }) => {
     const response = await request.post("/api/v1/collections", {
@@ -45,27 +39,25 @@ test.describe("Collections - POST /api/v1/collections", () => {
     createdIds.push(body.response.id);
   });
 
-  test("COL-001 (DI): rechaza un nombre vacío [DEFECTO DEF-COL-001]", async ({
+  test("COL-001 (DI): should reject an empty name [DEF-COL-001]", async ({
     request,
   }) => {
     const response = await request.post("/api/v1/collections", {
       data: { name: "" },
     });
 
-    // COMPORTAMIENTO ESPERADO (según avance 1, COL-001): 400 "Required [name]"
-    // COMPORTAMIENTO REAL OBSERVADO: 200, la colección se crea con name: ""
-    // CAUSA RAÍZ: PostCollectionSchema (schemaValidation.ts) define
-    //   name: z.string().trim().max(2048)
-    // sin .min(1)/.nonempty(), por lo que un string vacío es válido para Zod.
-    // Reportado como defecto DEF-COL-001 (prioridad media) en sección 6 del informe.
-    expect(response.status()).toBe(200);
-
+    // Expected per spec: 400 "Error: Required [name]".
+    // This assertion is intentionally left as the EXPECTED behavior, not the
+    // observed one. If it fails, that's the correct signal: DEF-COL-001 is
+    // still present (PostCollectionSchema.name has no .min(1)). See section 6.
     const body = await response.json();
-    expect(body.response.name).toBe("");
-    createdIds.push(body.response.id);
+
+    expect(response.status()).toBe(400);
+    expect(body.response).toContain("Required");
+    expect(body.response).toContain("[name]");
   });
 
-  test("COL-002 (DV): crea una colección con todos los campos opcionales", async ({
+  test("COL-002 (DV): creates a collection with all optional fields", async ({
     request,
   }) => {
     const response = await request.post("/api/v1/collections", {
@@ -88,7 +80,7 @@ test.describe("Collections - POST /api/v1/collections", () => {
     createdIds.push(body.response.id);
   });
 
-  test("COL-002 (DI): rechaza un color que excede 50 caracteres", async ({
+  test("COL-002 (DI): rejects a color exceeding 50 characters", async ({
     request,
   }) => {
     const response = await request.post("/api/v1/collections", {
@@ -101,23 +93,21 @@ test.describe("Collections - POST /api/v1/collections", () => {
     expect(response.status()).toBe(400);
 
     const body = await response.json();
+    // Zod's error wording changed between versions ("character(s)" -> "characters");
+    // asserting on a stable substring avoids coupling the test to that detail.
     expect(body.response).toContain("50 characters");
     expect(body.response).toContain("[color]");
-    // No se crea ninguna colección en este caso (rechazada por validación),
-    // por lo que no hay nada que agregar a createdIds.
   });
 
-  test("COL-003 (DV): crea una subcolección con parentId válido", async ({
+  test("COL-003 (DV): creates a sub-collection with a valid parentId", async ({
     request,
   }) => {
-    // Arrange: crear la colección padre primero
     const parentResponse = await request.post("/api/v1/collections", {
       data: { name: "Padre COL-003" },
     });
     const parent = (await parentResponse.json()).response;
     createdIds.push(parent.id);
 
-    // Act
     const response = await request.post("/api/v1/collections", {
       data: { name: "Backend", parentId: parent.id },
     });
@@ -128,55 +118,42 @@ test.describe("Collections - POST /api/v1/collections", () => {
     expect(body.response.parentId).toBe(parent.id);
     expect(body.response.ownerId).toBe(parent.ownerId);
     createdIds.push(body.response.id);
-    // NOTA: borrar primero el padre (createdIds en orden) cascadea y borra
-    // la subcolección también (ver FK Collection_parentId_fkey ON DELETE CASCADE),
-    // por lo que el delete individual de la subcolección en afterEach puede
-    // fallar silenciosamente (ya no existe) — esto es esperado y inofensivo
-    // gracias al .catch(() => {}) en el afterEach.
+    // Deleting the parent cascades and deletes this sub-collection too
+    // (Collection_parentId_fkey ON DELETE CASCADE), so its own afterEach
+    // delete call may silently no-op — expected, harmless.
   });
 
-  test("COL-003 (DI): rechaza un parentId inexistente con 403 (no 404)", async ({
+  test("COL-003 (DI): rejects a non-existent parentId with 403, not 404", async ({
     request,
   }) => {
     const response = await request.post("/api/v1/collections", {
       data: { name: "Backend", parentId: 999999 },
     });
 
-    // COMPORTAMIENTO ESPERADO según avance 1 (COL-003): 404 "Parent collection not found"
-    // COMPORTAMIENTO REAL CONFIRMADO: 403 "...not authorized to create a sub-collection..."
-    // CAUSA RAÍZ: en postCollection.ts, la verificación de permisos
-    // (memberHasAccess / ownerId) ocurre ANTES de resolver el parentId contra
-    // la base de datos. Con un usuario sin relación previa a ese id (exista o no),
-    // siempre cae en el bloque 403 antes de poder llegar al 404.
-    // El 404 solo sería alcanzable si el usuario SÍ tuviera permisos sobre un
-    // parentId que de algún modo deja de existir entre la verificación de
-    // permisos y la resolución del padre (condición de carrera, poco realista).
-    // Documentado como aclaración de COL-003/COL-025 (no se reporta como
-    // defecto: la respuesta 403 sigue siendo una denegación válida y segura).
+    // Spec expected 404 "Parent collection not found." Confirmed real
+    // behavior is 403: postCollection.ts checks permissions BEFORE resolving
+    // the parentId, so a user with no relation to that id always hits the
+    // 403 branch first.
     expect(response.status()).toBe(403);
 
     const body = await response.json();
     expect(body.response).toContain(
       "not authorized to create a sub-collection"
     );
-    // No se crea ninguna colección (rechazada), nada que limpiar.
   });
 
-  test("COL-004 (DV): miembro con permisos completos crea subcolección y queda agregado como miembro", async ({
+  test("COL-004 (DV): member with full permissions creates a sub-collection and is added as member", async ({
     request,
     baseURL,
   }) => {
-    // Arrange: qa-tester (owner) crea la colección padre
     const parentResponse = await request.post("/api/v1/collections", {
       data: { name: "Padre COL-004 DV" },
     });
     const parent = (await parentResponse.json()).response;
     createdIds.push(parent.id);
 
-    // Resolver dinámicamente el userId real de username0 en ESTA base de datos
     const member = await loginAs(baseURL!, "username0", "username0");
 
-    // qa-tester agrega a username0 (por su id real) como miembro con los 3 permisos
     const updateResponse = await request.put(
       `/api/v1/collections/${parent.id}`,
       {
@@ -196,7 +173,6 @@ test.describe("Collections - POST /api/v1/collections", () => {
     );
     expect(updateResponse.status()).toBe(200);
 
-    // Act: username0 (miembro, no owner) crea una subcolección
     const response = await member.context.post("/api/v1/collections", {
       data: { name: "Subcategoría COL-004 DV", parentId: parent.id },
     });
@@ -207,41 +183,33 @@ test.describe("Collections - POST /api/v1/collections", () => {
     expect(body.response.parentId).toBe(parent.id);
     createdIds.push(body.response.id);
 
-    // Verificar que username0 quedó agregado como miembro de la NUEVA
-    // colección con los 3 permisos en true. Según postCollection.ts líneas
-    // 111-123: cuando userId !== rootOwnerId, el código SIEMPRE agrega al
-    // creador como miembro con canCreate/canUpdate/canDelete = true,
-    // independientemente de los permisos que tenía en la colección padre.
-    // No es "herencia" de permisos del padre, es una asignación automática.
-    const newCollectionMembers = body.response.members ?? [];
-    const username0AsMember = newCollectionMembers.find(
-      (m: any) => m.userId === member.userId
-    );
-    expect(username0AsMember).toBeDefined();
-    expect(username0AsMember.canCreate).toBe(true);
-    expect(username0AsMember.canUpdate).toBe(true);
-    expect(username0AsMember.canDelete).toBe(true);
+    // postCollection.ts always grants full permissions to a non-owner
+    // creator on the NEW collection, regardless of their permissions on
+    // the parent — not inherited, automatically assigned.
+    const members = body.response.members ?? [];
+    const asMember = members.find((m: any) => m.userId === member.userId);
+    expect(asMember).toBeDefined();
+    expect(asMember.canCreate).toBe(true);
+    expect(asMember.canUpdate).toBe(true);
+    expect(asMember.canDelete).toBe(true);
 
     await member.context.dispose();
   });
 
-  test("COL-004 (DI): miembro SIN canCreate no puede crear subcolección", async ({
+  test("COL-004 (DI): member without canCreate cannot create a sub-collection", async ({
     request,
     baseURL,
   }) => {
-    // Arrange: qa-tester (owner) crea la colección padre
     const parentResponse = await request.post("/api/v1/collections", {
       data: { name: "Padre COL-004 DI" },
     });
     const parent = (await parentResponse.json()).response;
     createdIds.push(parent.id);
 
-    // Resolver dinámicamente el userId real de username1 en ESTA base de datos
     const member = await loginAs(baseURL!, "username1", "username1");
 
-    // qa-tester agrega a username1 como miembro SIN canCreate
-    // (canUpdate/canDelete en true para confirmar que el código exige los
-    // TRES permisos, no solo canCreate de forma aislada)
+    // canUpdate/canDelete are true here to confirm all THREE permissions
+    // are required, not just canCreate in isolation.
     const updateResponse = await request.put(
       `/api/v1/collections/${parent.id}`,
       {
@@ -261,7 +229,6 @@ test.describe("Collections - POST /api/v1/collections", () => {
     );
     expect(updateResponse.status()).toBe(200);
 
-    // Act: username1 (miembro con permisos incompletos) intenta crear subcolección
     const response = await member.context.post("/api/v1/collections", {
       data: { name: "Subcategoría COL-004 DI", parentId: parent.id },
     });

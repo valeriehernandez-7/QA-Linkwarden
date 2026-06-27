@@ -15,7 +15,6 @@ test.describe("Users - Create Users", () => {
        test("USR-001: create new user with an email", async ({page, }) => {
         await page.goto("/register");
 
-        // Pasos: Enviar datos válidos para crear usuario con email
         const testEmail = "user@test.com";
         const testPassword = "SecurePass123!";
         const displayName = "user";
@@ -38,7 +37,7 @@ test.describe("Users - Create Users", () => {
     test("USR-002: create new user with a name", async ({page, }) => {
         await page.goto("/register");
 
-        const testUsername = `usr002-${randomUUID().slice(0, 8)}`;   // valid: matches /^[a-z0-9_-]{3,50}$/
+        const testUsername = `usr002-${randomUUID().slice(0, 8)}`;
         const testName = "Test User";
         const testPassword = "SecurePass123!";
 
@@ -80,7 +79,7 @@ test.describe("Users - Create Users", () => {
                 response.request().method() === "POST"
         );
 
-        await page.getByTestId("display-name-input").fill("Promo User"); // ✅ required field
+        await page.getByTestId("display-name-input").fill("Promo User");
         await page.getByTestId("username-input").fill(testUsername);
         await page.getByTestId("password-input").fill(testPassword);
         await page.getByTestId("password-confirm-input").fill(testPassword);
@@ -127,8 +126,8 @@ test.describe("Users - Create Users", () => {
         const response = await responsePromise;
         expect(response.status()).toBe(201);
 
-        const user = (await response.json()).response; // ✅ unwrap nested response
-        expect(user).toHaveProperty("username", testUsernameLower); // ✅ expect lowercased
+        const user = (await response.json()).response;
+        expect(user).toHaveProperty("username", testUsernameLower);
         expect(user).toHaveProperty("createdAt");
 
         const toast = page.getByTestId("toast-message-container").first();
@@ -157,7 +156,7 @@ test.describe("Users - Create Users", () => {
             `/api/v1/users/${userId}`,
             {
                 data: {
-                    username: uniqueUsername, // ✅ required by PUT schema even when unchanged
+                    username: uniqueUsername,
                     name: newName,
                 },
             }
@@ -166,7 +165,7 @@ test.describe("Users - Create Users", () => {
         expect(updateResponse.status()).toBe(200);
 
         const updateBody = await updateResponse.json();
-        const updated = updateBody.response; // ✅ unwrap
+        const updated = updateBody.response;
 
         expect(updated).toHaveProperty("name", newName);
         expect(updated).toHaveProperty("id", userId);

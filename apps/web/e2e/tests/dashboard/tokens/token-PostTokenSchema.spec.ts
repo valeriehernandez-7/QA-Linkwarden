@@ -7,7 +7,7 @@ import { loginAs } from "@/e2e/helpers/auth";
 test.describe("Tokens POST Token Schema", () => {
 
     test("TOK-009: reject token name longer than 50 characters", async ({ request, baseURL }) => {
-        const tokenName = 'a'.repeat(51); // 51 characters long
+        const tokenName = 'a'.repeat(51);
         const authenticatedUser = await loginAs(baseURL!, "username0", "username0");
     
         const response = await authenticatedUser.context.post("/api/v1/tokens", {

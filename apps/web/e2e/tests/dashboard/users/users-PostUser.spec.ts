@@ -73,7 +73,6 @@ test.describe("Users - Create Users", () => {
 
         const inviteBody = await inviteResponse.json();
 
-        // Invite requires STRIPE_SECRET_KEY + EMAIL_FROM + EMAIL_SERVER — skip if not configured
         if (inviteResponse.status() === 401 &&
             inviteBody?.response === "You are not authorized to invite users.") {
             test.skip();

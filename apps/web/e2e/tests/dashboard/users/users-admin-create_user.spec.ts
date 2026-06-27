@@ -4,7 +4,7 @@ import { text } from "stream/consumers";
 
 test.describe("Admin user create Account", () => {
 
-    test("USR-022: Login with Valid credentials", async ({page, }) => {
+    test("USR-023: Login with Valid credentials", async ({page, }) => {
         await page.goto("/login");
 
         await page.getByTestId("username-input").fill("username0");
@@ -31,7 +31,7 @@ test.describe("Admin user create Account", () => {
 
     });
 
-    test("USR-023-a: create new user account with valid credentials", async ({page, }) => {
+    test("USR-024-a: create new user account with valid credentials", async ({page, }) => {
         await page.goto("/register");
 
         await page.getByTestId("display-name-input").fill("WaitingDeletion");
@@ -41,7 +41,7 @@ test.describe("Admin user create Account", () => {
         await page.getByTestId("register-button").click();
     });
 
-    test("USR-023-b: login with created user and delete user", async ({page, }) => {
+    test("USR-024-b: login with created user and delete user", async ({page, }) => {
         await page.goto("/login");
 
         await page.getByTestId("username-input").fill("username0");

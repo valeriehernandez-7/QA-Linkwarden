@@ -43,7 +43,7 @@ test.describe("Users - Create Users", () => {
         expect(updateResponse.status()).toBe(200);
 
         const updateBody = await updateResponse.json();
-        const updated = updateBody.response; // ✅ unwrap
+        const updated = updateBody.response;
 
         expect(updated).toHaveProperty("username", newUsername);
         expect(updated).toHaveProperty("id", userId);
@@ -75,7 +75,7 @@ test.describe("Users - Create Users", () => {
             `/api/v1/users/${userId}`,
             {
                 data: {
-                    username: uniqueUsername, // ✅ required by PUT schema
+                    username: uniqueUsername,
                     image: base64Avatar,
                 },
             }
@@ -84,7 +84,7 @@ test.describe("Users - Create Users", () => {
         expect(updateResponse.status()).toBe(200);
 
         const updateBody = await updateResponse.json();
-        const updated = (await updateResponse.json()).response;
+        const updated = updateBody.response;
         expect(updated).toHaveProperty("image");
         expect(updated.image).toContain(`uploads/avatar/${userId}.jpg`);
 
@@ -113,7 +113,7 @@ test.describe("Users - Create Users", () => {
             `/api/v1/users/${userId}`,
             {
                 data: {
-                    username,           // ✅ required by PUT schema
+                    username,
                     oldPassword,
                     newPassword,
                 },
@@ -123,7 +123,7 @@ test.describe("Users - Create Users", () => {
         expect(updateResponse.status()).toBe(200);
 
         const updateBody = await updateResponse.json();
-        const updated = updateBody.response; // ✅ unwrap
+        const updated = updateBody.response;
         expect(updated).toHaveProperty("id", userId);
 
         const csrfResponse = await request.get("/api/v1/auth/csrf");
@@ -183,7 +183,7 @@ test.describe("Users - Create Users", () => {
             `/api/v1/users/${userId}`,
             {
                 data: {
-                    username: uniqueUsername, // ✅ required by PUT schema
+                    username: uniqueUsername,
                     archiveAsScreenshot: true,
                     archiveAsPDF: false,
                 },
@@ -192,8 +192,8 @@ test.describe("Users - Create Users", () => {
 
         expect(updateResponse.status()).toBe(200);
         const updateBody = await updateResponse.json();
-        const updated = updateBody.response; // ✅ unwrap
-        expect(updated).toHaveProperty("archiveAsScreenshot", true); // USR-011
+        const updated = updateBody.response;
+        expect(updated).toHaveProperty("archiveAsScreenshot", true);
         expect(updated).toHaveProperty("archiveAsPDF", false);
 
         await authenticated.context.dispose();
@@ -221,7 +221,7 @@ test.describe("Users - Create Users", () => {
             `/api/v1/users/${userId}`,
             {
                 data: {
-                    username: uniqueUsername, // ✅ required by PUT schema
+                    username: uniqueUsername,
                     locale,
                 },
             }
@@ -229,8 +229,8 @@ test.describe("Users - Create Users", () => {
 
         expect(updateResponse.status()).toBe(200);
         const updateBody = await updateResponse.json();
-        const updated = updateBody.response; // ✅ unwrap
-        expect(updated).toHaveProperty("locale", locale);            // USR-012
+        const updated = updateBody.response;
+        expect(updated).toHaveProperty("locale", locale);
 
         await authenticated.context.dispose();
     });

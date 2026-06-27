@@ -4,7 +4,7 @@ import { text } from "stream/consumers";
 
 
 test.describe("Login Users", () => {
-  test("USR-001: login with valid credentials", async ({page, }) => {
+  test("USR-010: login with valid credentials", async ({page, }) => {
     await page.goto("/login");
 
     await page.getByTestId("username-input").fill("testing_username");

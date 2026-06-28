@@ -127,7 +127,7 @@ test.describe("LNK", () => {
     })
 
     test("LNK-008 - actualizar url de un link", async ({ page }) => {
-        const newUrl = "https://www.nuevo1.com/";
+        const newUrl = "https://www.nuevo2.com/";
         const urlVieja = "https://www.viejo.com";
 
         // crear link

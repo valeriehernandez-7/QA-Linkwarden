@@ -32,6 +32,10 @@ test.describe("Tokens POST Token", () => {
         expect(expiryDate.getTime()).toBeLessThan(now + 8 * 24 * 60 * 60 * 1000);
 
         await authenticatedUser.context.dispose();
+
+        stdout.write(`Created token: ${tokenName}\n`);
+        stdout.write(`Response: ${JSON.stringify(body)}\n`);
+        stdout.write(`Token expires at: ${expiryDate.toISOString()}\n`);
     });
 
     test("TOK-002: create token with never expiration", async ({ request, baseURL }) => {
@@ -62,6 +66,9 @@ test.describe("Tokens POST Token", () => {
         expect(expiryDate.getTime()).toBeLessThan(maxExpected);
 
         await authenticatedUser.context.dispose();
+        stdout.write(`Created token: ${tokenName}\n`);
+        stdout.write(`Response: ${JSON.stringify(body)}\n`);
+        stdout.write(`Token expires at: ${expiryDate.toISOString()}\n`);
     });
 
     test("TOK-003: create token with one-month expiration", async ({ baseURL }) => {
@@ -91,6 +98,9 @@ test.describe("Tokens POST Token", () => {
         expect(expiryDate.getTime()).toBeLessThan(maxExpected);
 
         await authenticatedUser.context.dispose();
+        stdout.write(`Created token: ${tokenName}\n`);
+        stdout.write(`Response: ${JSON.stringify(body)}\n`);
+        stdout.write(`Token expires at: ${expiryDate.toISOString()}\n`);
     });
 
     test("TOK-004: create token with two-month expiration", async ({ baseURL }) => {
@@ -120,6 +130,10 @@ test.describe("Tokens POST Token", () => {
         expect(expiryDate.getTime()).toBeLessThan(maxExpected);
 
         await authenticatedUser.context.dispose();
+
+        stdout.write(`Created token: ${tokenName}\n`);
+        stdout.write(`Response: ${JSON.stringify(body)}\n`);
+        stdout.write(`Token expires at: ${expiryDate.toISOString()}\n`);
     });
 
     test("TOK-005: create token with three-month expiration", async ({ baseURL }) => {
@@ -149,6 +163,9 @@ test.describe("Tokens POST Token", () => {
         expect(expiryDate.getTime()).toBeLessThan(maxExpected);
 
         await authenticatedUser.context.dispose();
+        stdout.write(`Created token: ${tokenName}\n`);
+        stdout.write(`Response: ${JSON.stringify(body)}\n`);
+        stdout.write(`Token expires at: ${expiryDate.toISOString()}\n`);
     });
 
     test("TOK-006: response includes a non-empty JWT secretKey", async ({ baseURL }) => {
@@ -170,6 +187,9 @@ test.describe("Tokens POST Token", () => {
         expect(body.response.secretKey.length).toBeGreaterThan(0);
 
         await authenticatedUser.context.dispose();
+        
+        stdout.write(`Created token: ${tokenName}\n`);
+        stdout.write(`Response: ${JSON.stringify(body)}\n`);
     });
 
     test("TOK-011: reject duplicate active token name", async ({ baseURL }) => {
@@ -201,6 +221,9 @@ test.describe("Tokens POST Token", () => {
         expect(secondResponse.status()).toBe(400);
         expect(secondBody.response).toContain("Token with that name already exists");
 
+        stdout.write(`Attempted to create duplicate token: ${tokenName}\n`);
+        stdout.write(`Response: ${JSON.stringify(secondBody)}\n`);
+
         await authenticatedUser.context.dispose();
     });
 
@@ -220,6 +243,9 @@ test.describe("Tokens POST Token", () => {
 
         expect(response.status()).toBe(400);
         expect(body.response).toContain("Required");
+
+        stdout.write(`Attempted to create token with empty name: ${tokenName}\n`);
+        stdout.write(`Response: ${JSON.stringify(body)}\n`);
 
         await authenticatedUser.context.dispose();
     });

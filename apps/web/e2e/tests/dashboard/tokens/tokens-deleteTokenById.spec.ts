@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { test, expect } from "../../../index";
 import { text } from "stream/consumers";
 import { loginAs } from "@/e2e/helpers/auth";
+import { stdout } from "process";
 
 
 test.describe("Tokens DELETE Token by ID", () => {
@@ -30,6 +31,9 @@ test.describe("Tokens DELETE Token by ID", () => {
         expect(revokeBody.response.revoked).toBe(true);
 
         await authenticatedUser.context.dispose();
+
+        stdout.write(`Attempted to create token with invalid expires value: ${tokenName}\n`);
+        stdout.write(`Response: ${JSON.stringify(revokeBody)}\n`);
     });
 
     test("TOK-008: revoke an already revoked token idempotently", async ({ baseURL }) => {
@@ -61,5 +65,9 @@ test.describe("Tokens DELETE Token by ID", () => {
         expect(secondRevokeBody.response.revoked).toBe(true);
 
         await authenticatedUser.context.dispose();
+
+        stdout.write(`Attempted to revoke token: ${tokenName}\n`);
+        stdout.write(`First revoke response: ${JSON.stringify(firstRevokeBody)}\n`);
+        stdout.write(`Second revoke response: ${JSON.stringify(secondRevokeBody)}\n`);
     });
 });

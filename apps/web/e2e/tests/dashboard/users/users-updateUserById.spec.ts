@@ -4,9 +4,10 @@ import path from "path";
 import { test, expect } from "../../../index";
 import { loginAs } from "../../../helpers/auth";
 import { text } from "stream/consumers";
+import { stdout } from "process";
 
 
-test.describe("Users - Create Users", () => {
+test.describe("Users - Update Users By ID", () => {
 
     test.beforeEach(async ({ page }) => {
         await page.context().clearCookies();
@@ -49,6 +50,8 @@ test.describe("Users - Create Users", () => {
         expect(updated).toHaveProperty("id", userId);
 
         await authenticated.context.dispose();
+
+        stdout.write(`Created user: ${JSON.stringify(updateBody)}\n`);
     });
 
     test("USR-009: upload JPEG avatar base64 under 1.5MB", async ({ request, baseURL }) => {
@@ -89,6 +92,9 @@ test.describe("Users - Create Users", () => {
         expect(updated.image).toContain(`uploads/avatar/${userId}.jpg`);
 
         await authenticated.context.dispose();
+
+        
+        stdout.write(`Created user: ${JSON.stringify(updateBody)}\n`);
     });
 
     test("USR-010: change password with old password", async ({ request, baseURL }) => {
@@ -160,6 +166,9 @@ test.describe("Users - Create Users", () => {
         expect(newLoginResponse.status()).toBe(200);
 
         await authenticated.context.dispose();
+
+        stdout.write(`Created user: ${JSON.stringify(updateBody)}\n`);
+        stdout.write(`Created user: ${JSON.stringify(updateBody)}\n`);
     });
 
     test("USR-011: update automatic archive preferences", async ({ request, baseURL }) => {
@@ -197,12 +206,13 @@ test.describe("Users - Create Users", () => {
         expect(updated).toHaveProperty("archiveAsPDF", false);
 
         await authenticated.context.dispose();
+        stdout.write(`Created user: ${JSON.stringify(updateBody)}\n`);
     });
     
     test("USR-012: change locale to supported language", async ({ request, baseURL }) => {
         const uniqueUsername = `usr012-${randomUUID().slice(0, 8)}`;
         const password = "SecurePass123!";
-        const locale = "es";
+        const locale = "fr";
 
         const createResponse = await request.post("/api/v1/users", {
             data: {
@@ -233,6 +243,7 @@ test.describe("Users - Create Users", () => {
         expect(updated).toHaveProperty("locale", locale);
 
         await authenticated.context.dispose();
-    });
+        stdout.write(`Created user: ${JSON.stringify(updateBody)}\n`);
+    }); 
 
 });

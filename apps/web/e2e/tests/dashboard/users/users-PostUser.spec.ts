@@ -7,7 +7,7 @@ import { text } from "stream/consumers";
 import { stdout } from "process";
 
 
-test.describe("Users - Create Users", () => {
+test.describe("Users - Post Users", () => {
 
     test.beforeEach(async ({ page }) => {
         await page.context().clearCookies();

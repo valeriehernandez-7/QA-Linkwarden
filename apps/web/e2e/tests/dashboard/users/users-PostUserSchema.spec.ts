@@ -7,7 +7,7 @@ import { text } from "stream/consumers";
 import { stdout } from "process";
 
 
-test.describe("Users - Create Users", () => {
+test.describe("Users - Post Users Schema", () => {
 
     test.beforeEach(async ({ page }) => {
         await page.context().clearCookies();
@@ -77,13 +77,11 @@ test.describe("Users - Create Users", () => {
         const testUsername = `usr003-${random}`;
         const testPassword = "SecurePass123!";
 
-        // Create initial user via API
         const createResponse = await request.post(`/api/v1/users`, {
             data: { username: testUsername, password: testPassword },
         });
         expect(createResponse.status()).toBe(201);
 
-        // Try to create the same user again via the UI and expect an error toast
         await page.goto("/register");
 
         await page.getByTestId("display-name-input").fill("Duplicate User");

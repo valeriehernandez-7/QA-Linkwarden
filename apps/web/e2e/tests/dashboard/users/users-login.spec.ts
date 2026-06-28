@@ -3,7 +3,7 @@ import { test, expect } from "../../../index";
 import { text } from "stream/consumers";
 
 
-test.describe("Login Users", () => {
+test.describe("Users - Login Users via /login", () => {
   test("USR-010: login with valid credentials", async ({page, }) => {
     await page.goto("/login");
 

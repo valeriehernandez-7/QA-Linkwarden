@@ -1,8 +1,23 @@
 import { test, expect } from "../../../index";
 import { loginAs } from "@/e2e/helpers/auth";
+import { randomUUID } from "crypto";
 
 test.describe("Tags - Ordenamiento (API)", () => {
+    test.beforeEach(async ({ baseURL }) => {
+        const authenticatedUser = await loginAs(baseURL || "http://localhost:3000", "username0", "username0");
+        
+        const dummyTags = [
+            { name: `A-tag-${randomUUID().slice(0, 4)}`, label: "A" },
+            { name: `B-tag-${randomUUID().slice(0, 4)}`, label: "B" },
+            { name: `C-tag-${randomUUID().slice(0, 4)}`, label: "C" }
+        ];
 
+        await authenticatedUser.context.post("/api/v1/tags", {
+            data: { tags: dummyTags }
+        });
+
+        await authenticatedUser.context.dispose();
+    });
     test("TAG-15: Ordenar la lista de etiquetas ascendentemente por su nombre", async ({ baseURL }) => {
         const authenticatedUser = await loginAs(baseURL || "http://localhost:3000", "username0", "username0");
 

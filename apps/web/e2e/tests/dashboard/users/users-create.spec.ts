@@ -6,6 +6,11 @@ import { loginAs } from "../../../helpers/auth";
 import { text } from "stream/consumers";
 
 test.describe("Users - Create Users via /register", () => {
+
+  test.beforeEach(async ({ page }) => {
+    await page.context().clearCookies();
+  })
+
   test("USR-014: create new user account with existing username", async ({page, }) => {
     await page.goto("/register");
 

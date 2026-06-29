@@ -4,6 +4,11 @@ import { text } from "stream/consumers";
 
 
 test.describe("Users - Login Users via /login", () => {
+  
+  test.beforeEach(async ({ page }) => {
+    await page.context().clearCookies();
+  })
+
   test("USR-023: login with valid credentials", async ({page, }) => {
     await page.goto("/login");
 

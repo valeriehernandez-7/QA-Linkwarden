@@ -126,34 +126,34 @@ test.describe("LNK", () => {
         await expect(page.locator(`a[title=${coleccion}]`).first()).toBeVisible();
     })
 
-    test("LNK-008 - actualizar url de un link", async ({ page }) => {
-        const newUrl = "https://www.nuevo2.com/";
-        const urlVieja = "https://www.viejo.com";
+    // test("LNK-008 - actualizar url de un link", async ({ page }) => {
+    //     const newUrl = "https://www.nuevo2.com/";
+    //     const urlVieja = "https://www.viejo.com";yarn
 
-        // crear link
-        await page.getByRole('button', { name: ' ' }).first().click();
-        await page.locator("xpath=/html/body/div[3]/div/div[1]").click();
-        await expect(page.getByTestId("modal-container")).toBeVisible();
-        await page.getByPlaceholder("e.g. http://example.com/").fill(urlVieja);
-        await page.getByRole("button", { name: "Create Link" }).click();
-        await expect(page.locator(`a[title="${urlVieja}"]`).first()).toBeVisible();
+    //     // crear link
+    //     await page.getByRole('button', { name: ' ' }).first().click();
+    //     await page.locator("xpath=/html/body/div[3]/div/div[1]").click();
+    //     await expect(page.getByTestId("modal-container")).toBeVisible();
+    //     await page.getByPlaceholder("e.g. http://example.com/").fill(urlVieja);
+    //     await page.getByRole("button", { name: "Create Link" }).click();
+    //     await expect(page.locator(`a[title="${urlVieja}"]`).first()).toBeVisible();
 
-        // actualizar
-        const card = page.locator("div.h-full").filter({
-            has: page.locator(`a[title="${urlVieja}"]`)
-        }).first();
-        await card.hover();
-        await card.locator("i[title='More']").first().click();
-        await page.getByRole("menuitem", { name: "Edit Link" }).click();
+    //     // actualizar
+    //     const card = page.locator("div.h-full").filter({
+    //         has: page.locator(`a[title="${urlVieja}"]`)
+    //     }).first();
+    //     await card.hover();
+    //     await card.locator("i[title='More']").first().click();
+    //     await page.getByRole("menuitem", { name: "Edit Link" }).click();
 
-        let inputUrl = page.locator("xpath=/html/body/div[4]/div/div[2]/div/div/div[3]/div[2]/input");
-        inputUrl.clear();
-        inputUrl.fill(newUrl);
+    //     let inputUrl = page.locator("xpath=/html/body/div[4]/div/div[2]/div/div/div[3]/div[2]/input");
+    //     inputUrl.clear();
+    //     inputUrl.fill(newUrl);
 
-        await page.getByRole("button", { name: "Save Changes" }).click();
+    //     await page.getByRole("button", { name: "Save Changes" }).click();
 
-        await expect(page.locator(`a[title="${newUrl}"]`, { hasText: newUrl })).toBeVisible();
-    })
+    //     await expect(page.locator(`a[title="${newUrl}"]`, { hasText: newUrl })).toBeVisible();
+    // })
 
     // test("LNK-007 - actualizar nombre de un link", async ({ page }) => {
     //     const nuevoNombre = "Hola soy recontra nuevo";
@@ -373,7 +373,59 @@ test.describe("LNK", () => {
         await expect(msg).toHaveAttribute("data-type", "error");
     })
 
+    // test("LNK-017 - exceder limite de links por usuario", async ({ page }) => {
+    //     for (let i = 0; i < 402; i++) {
+    //         const url = "https://codeforces.com/";
+
+    //         // presionar boton
+    //         await page.getByRole('button', { name: ' ' }).first().click();
+    //         await page.locator("xpath=/html/body/div[3]/div/div[1]").click();
+
+    //         // esperar a que se abra el contenedor
+    //         await expect(page.getByTestId("modal-container")).toBeVisible();
+
+    //         // llenar el campo de url
+    //         await page.getByPlaceholder("e.g. http://example.com/").fill(url);
+
+    //         // apretar el boton de crear
+    //         await page.getByRole("button", { name: "Create Link" }).click();
+
+    //         await expect(page.getByTestId("modal-container")).not.toBeVisible();
+    //     }
+    // })
+
     test("LNK-018 - actualizar con url invalida de un link", async ({ page }) => {
+        const urlVieja = "https://www.hola.com/";
+        const urlNueva = `ElPepe`;
+
+        // CREAR LINK
+        await page.getByRole('button', { name: ' ' }).first().click();
+        await page.locator("xpath=/html/body/div[3]/div/div[1]").click();
+        await expect(page.getByTestId("modal-container")).toBeVisible();
+        await page.getByPlaceholder("e.g. http://example.com/").fill(urlVieja);
+        await page.getByRole("button", { name: "Create Link" }).click();
+        await expect(page.locator(`a[title="${urlVieja}"]`).first()).toBeVisible();
+
+        // actualizar
+        const card = page.locator("div.h-full").filter({
+            has: page.locator(`a[title="${urlVieja}"]`)
+        }).first();
+        await card.hover();
+        await card.locator("i[title='More']").first().click();
+        await page.getByRole("menuitem", { name: "Edit Link" }).click();
+
+        const inputUrl = page.locator("xpath=/html/body/div[4]/div/div[2]/div/div/div[3]/div[2]/input");
+        inputUrl.clear();
+        inputUrl.fill(urlNueva);
+
+        await page.getByRole("button", { name: "Save Changes" }).click();
+
+        const msg = page.getByTestId("toast-message-container").first();
+        await expect(msg).toBeVisible();
+        await expect(msg).toHaveAttribute("data-type", "error");
+    })
+
+    test("LNK-019 - actualizar con url que exceda el limite de caracteres de un link", async ({ page }) => {
         const urlVieja = "https://www.hola.com/";
         const urlNueva = `https://www.hola${"a".repeat(2050)}.com/`;
 

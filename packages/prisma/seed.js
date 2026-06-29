@@ -8,7 +8,9 @@ async function main() {
   const saltRounds = 10;
   const defaultPassword = "11111111";
   const hashedPassword = bcrypt.hashSync(defaultPassword, saltRounds);
+  const passwordForUser0 = "username0"; 
 
+  const hashedPasswordForUser0 = bcrypt.hashSync(passwordForUser0, saltRounds);
   // Subscription dates
   const currentPeriodStart = new Date();
   const currentPeriodEnd = new Date();
@@ -17,6 +19,32 @@ async function main() {
   // Operations to be executed within a transaction
   const transaction = await prisma.$transaction(async (prisma) => {
     // Create users with subscriptions
+    const user6 = await prisma.user.create({
+      data: {
+        name: "QA Tester 0",
+        username: "username0",
+        email: "username0@example.com",
+        emailVerified: new Date(),
+        password: hashedPasswordForUser0,
+        subscriptions: {
+          create: {
+            stripeSubscriptionId: "sub_test_0000",
+            active: true,
+            currentPeriodStart,
+            currentPeriodEnd,
+          },
+        },
+        dashboardSections: {
+          createMany: {
+            data: [
+              { order: 0, type: "STATS" },
+              { order: 1, type: "RECENT_LINKS" },
+              { order: 2, type: "PINNED_LINKS" },
+            ],
+          },
+        },
+      },
+    });
     const user1 = await prisma.user.create({
       data: {
         name: "John Doe",

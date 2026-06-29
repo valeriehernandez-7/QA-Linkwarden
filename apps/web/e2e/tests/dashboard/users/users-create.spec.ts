@@ -5,7 +5,7 @@ import { test, expect } from "../../../index";
 import { loginAs } from "../../../helpers/auth";
 import { text } from "stream/consumers";
 
-test.describe("Create Users", () => {
+test.describe("Users - Create Users via /register", () => {
   test("USR-014: create new user account with existing username", async ({page, }) => {
     await page.goto("/register");
 

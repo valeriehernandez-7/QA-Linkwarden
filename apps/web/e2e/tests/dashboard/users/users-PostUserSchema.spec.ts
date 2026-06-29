@@ -4,21 +4,21 @@ import path from "path";
 import { test, expect } from "../../../index";
 import { loginAs } from "../../../helpers/auth";
 import { text } from "stream/consumers";
+import { stdout } from "process";
 
 
-test.describe("Users - Create Users", () => {
+test.describe("Users - Post Users Schema", () => {
 
     test.beforeEach(async ({ page }) => {
         await page.context().clearCookies();
     })
 
-       test("USR-001: create new user with an email", async ({page, }) => {
+    test("USR-001: create new user with an email", async ({page, }) => {
         await page.goto("/register");
 
-        // Pasos: Enviar datos válidos para crear usuario con email
-        const testEmail = "user@test.com";
-        const testPassword = "SecurePass123!";
+        const testEmail = "usr001@test.com";
         const displayName = "user";
+        const testPassword = "SecurePass123!";
 
 
         await page.getByTestId("display-name-input").fill(displayName);
@@ -38,12 +38,13 @@ test.describe("Users - Create Users", () => {
     test("USR-002: create new user with a name", async ({page, }) => {
         await page.goto("/register");
 
-        const testUsername = `usr002-${randomUUID().slice(0, 8)}`;   // valid: matches /^[a-z0-9_-]{3,50}$/
+        const testUsername = `usr002-${randomUUID().slice(0, 8)}`;
         const testName = "Test User";
         const testPassword = "SecurePass123!";
 
-        const responsePromise = page.waitForResponse(response =>
-            response.url().includes("/api/v1/users") && response.request().method() === "POST"
+        const responsePromise = page.waitForResponse( response =>
+            response.url().includes("/api/v1/users") && 
+            response.request().method() === "POST"
         );
 
         await page.getByTestId("display-name-input").fill(testName);
@@ -66,45 +67,38 @@ test.describe("Users - Create Users", () => {
         const toast = page.getByTestId("toast-message-container").first();
         await expect(toast).toBeVisible();
         await expect(toast).toHaveAttribute("data-type", "success");
+        
+        stdout.write(`Created user: ${JSON.stringify(user)}\n`);
+        stdout.write(`Response body: ${JSON.stringify(toast)}\n`);
     });
 
-    test("USR-003: create new user with promotional email preference", async ({page, }) => {
-        await page.goto("/register");
-
-        const testUsername = `usr003-${randomUUID().slice(0, 8)}`;
+    test("USR-003: reject creating user with duplicate username", async ({ page, request, baseURL }) => {
+        const random = randomUUID().slice(0, 8);
+        const testUsername = `usr003-${random}`;
         const testPassword = "SecurePass123!";
 
-        const responsePromise = page.waitForResponse(
-            response =>
-                response.url().includes("/api/v1/users") &&
-                response.request().method() === "POST"
-        );
+        const createResponse = await request.post(`/api/v1/users`, {
+            data: { username: testUsername, password: testPassword },
+        });
+        expect(createResponse.status()).toBe(201);
 
-        await page.getByTestId("display-name-input").fill("Promo User"); // ✅ required field
+        await page.goto("/register");
+
+        await page.getByTestId("display-name-input").fill("Duplicate User");
         await page.getByTestId("username-input").fill(testUsername);
         await page.getByTestId("password-input").fill(testPassword);
         await page.getByTestId("password-confirm-input").fill(testPassword);
-
-        const promoCheckbox = page.locator("[data-testid=accept-promotional-emails]");
-        if (await promoCheckbox.count() > 0 && !(await promoCheckbox.isChecked())) {
-            await promoCheckbox.check();
-        }
-
         await page.getByTestId("register-button").click();
-
-        const response = await responsePromise;
-        expect(response.status()).toBe(201);
-
-        const user = (await response.json()).response;
-        expect(user).toHaveProperty("username", testUsername);
-        expect(user).toHaveProperty("createdAt");
 
         const toast = page.getByTestId("toast-message-container").first();
         await expect(toast).toBeVisible();
-        await expect(toast).toHaveAttribute("data-type", "success");
+        await expect(toast).toHaveAttribute("data-type", "error");
+
+        stdout.write(`Attempted to create duplicate user: ${testUsername}\n`);
+        stdout.write(`Response body: ${JSON.stringify(toast)}\n`);
     });
 
-    test("USR-004: normalize uppercase email to lowercase", async ({page, }) => {
+    test("USR-004: normalize uppercase username to lowercase", async ({page, }) => {
         await page.goto("/register");
 
         const random = randomUUID().slice(0, 8);
@@ -127,13 +121,16 @@ test.describe("Users - Create Users", () => {
         const response = await responsePromise;
         expect(response.status()).toBe(201);
 
-        const user = (await response.json()).response; // ✅ unwrap nested response
-        expect(user).toHaveProperty("username", testUsernameLower); // ✅ expect lowercased
+        const user = (await response.json()).response;
+        expect(user).toHaveProperty("username", testUsernameLower);
         expect(user).toHaveProperty("createdAt");
 
         const toast = page.getByTestId("toast-message-container").first();
         await expect(toast).toBeVisible();
         await expect(toast).toHaveAttribute("data-type", "success");
+
+        stdout.write(`Created user: ${JSON.stringify(user)}\n`);
+        stdout.write(`Response body: ${JSON.stringify(toast)}\n`);
     });
     
     test("USR-007: update existing user name", async ({ request, baseURL }) => {
@@ -157,7 +154,7 @@ test.describe("Users - Create Users", () => {
             `/api/v1/users/${userId}`,
             {
                 data: {
-                    username: uniqueUsername, // ✅ required by PUT schema even when unchanged
+                    username: uniqueUsername,
                     name: newName,
                 },
             }
@@ -166,14 +163,13 @@ test.describe("Users - Create Users", () => {
         expect(updateResponse.status()).toBe(200);
 
         const updateBody = await updateResponse.json();
-        const updated = updateBody.response; // ✅ unwrap
+        const updated = updateBody.response;
 
         expect(updated).toHaveProperty("name", newName);
         expect(updated).toHaveProperty("id", userId);
 
         await authenticated.context.dispose();
+
+        stdout.write(`Created user: ${JSON.stringify(updateBody)}\n`);
     });
-
-
-
 });

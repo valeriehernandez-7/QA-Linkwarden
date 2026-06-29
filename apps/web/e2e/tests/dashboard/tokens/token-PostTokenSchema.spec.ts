@@ -2,12 +2,13 @@ import { randomUUID } from "crypto";
 import { test, expect } from "../../../index";
 import { text } from "stream/consumers";
 import { loginAs } from "@/e2e/helpers/auth";
+import { stdout } from "process";
 
 
 test.describe("Tokens POST Token Schema", () => {
 
     test("TOK-009: reject token name longer than 50 characters", async ({ request, baseURL }) => {
-        const tokenName = 'a'.repeat(51); // 51 characters long
+        const tokenName = 'a'.repeat(51);
         const authenticatedUser = await loginAs(baseURL!, "username0", "username0");
     
         const response = await authenticatedUser.context.post("/api/v1/tokens", {
@@ -23,6 +24,9 @@ test.describe("Tokens POST Token Schema", () => {
         expect(body.response).toContain("Too big: expected string to have <=50 characters");
     
         await authenticatedUser.context.dispose();
+
+        stdout.write(`Attempted to create token with invalid expires value: ${tokenName}\n`);
+        stdout.write(`Response: ${JSON.stringify(body)}\n`);
     });
     
     test("TOK-010: reject invalid expires enum value", async ({ request, baseURL }) => {
@@ -42,5 +46,8 @@ test.describe("Tokens POST Token Schema", () => {
         expect(body.response).toContain("Invalid option: expected one of 0|1|2|3|4 ");
     
         await authenticatedUser.context.dispose();
+
+        stdout.write(`Attempted to create token with invalid expires value: ${tokenName}\n`);
+        stdout.write(`Response: ${JSON.stringify(body)}\n`);
     });
 });

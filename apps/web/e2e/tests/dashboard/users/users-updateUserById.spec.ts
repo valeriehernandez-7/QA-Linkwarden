@@ -4,9 +4,10 @@ import path from "path";
 import { test, expect } from "../../../index";
 import { loginAs } from "../../../helpers/auth";
 import { text } from "stream/consumers";
+import { stdout } from "process";
 
 
-test.describe("Users - Create Users", () => {
+test.describe("Users - Update Users By ID", () => {
 
     test.beforeEach(async ({ page }) => {
         await page.context().clearCookies();
@@ -43,12 +44,14 @@ test.describe("Users - Create Users", () => {
         expect(updateResponse.status()).toBe(200);
 
         const updateBody = await updateResponse.json();
-        const updated = updateBody.response; // ✅ unwrap
+        const updated = updateBody.response;
 
         expect(updated).toHaveProperty("username", newUsername);
         expect(updated).toHaveProperty("id", userId);
 
         await authenticated.context.dispose();
+
+        stdout.write(`Created user: ${JSON.stringify(updateBody)}\n`);
     });
 
     test("USR-009: upload JPEG avatar base64 under 1.5MB", async ({ request, baseURL }) => {
@@ -75,7 +78,7 @@ test.describe("Users - Create Users", () => {
             `/api/v1/users/${userId}`,
             {
                 data: {
-                    username: uniqueUsername, // ✅ required by PUT schema
+                    username: uniqueUsername,
                     image: base64Avatar,
                 },
             }
@@ -84,11 +87,14 @@ test.describe("Users - Create Users", () => {
         expect(updateResponse.status()).toBe(200);
 
         const updateBody = await updateResponse.json();
-        const updated = (await updateResponse.json()).response;
+        const updated = updateBody.response;
         expect(updated).toHaveProperty("image");
         expect(updated.image).toContain(`uploads/avatar/${userId}.jpg`);
 
         await authenticated.context.dispose();
+
+        
+        stdout.write(`Created user: ${JSON.stringify(updateBody)}\n`);
     });
 
     test("USR-010: change password with old password", async ({ request, baseURL }) => {
@@ -113,7 +119,7 @@ test.describe("Users - Create Users", () => {
             `/api/v1/users/${userId}`,
             {
                 data: {
-                    username,           // ✅ required by PUT schema
+                    username,
                     oldPassword,
                     newPassword,
                 },
@@ -123,7 +129,7 @@ test.describe("Users - Create Users", () => {
         expect(updateResponse.status()).toBe(200);
 
         const updateBody = await updateResponse.json();
-        const updated = updateBody.response; // ✅ unwrap
+        const updated = updateBody.response;
         expect(updated).toHaveProperty("id", userId);
 
         const csrfResponse = await request.get("/api/v1/auth/csrf");
@@ -160,6 +166,9 @@ test.describe("Users - Create Users", () => {
         expect(newLoginResponse.status()).toBe(200);
 
         await authenticated.context.dispose();
+
+        stdout.write(`Created user: ${JSON.stringify(updateBody)}\n`);
+        stdout.write(`Created user: ${JSON.stringify(updateBody)}\n`);
     });
 
     test("USR-011: update automatic archive preferences", async ({ request, baseURL }) => {
@@ -183,7 +192,7 @@ test.describe("Users - Create Users", () => {
             `/api/v1/users/${userId}`,
             {
                 data: {
-                    username: uniqueUsername, // ✅ required by PUT schema
+                    username: uniqueUsername,
                     archiveAsScreenshot: true,
                     archiveAsPDF: false,
                 },
@@ -192,17 +201,18 @@ test.describe("Users - Create Users", () => {
 
         expect(updateResponse.status()).toBe(200);
         const updateBody = await updateResponse.json();
-        const updated = updateBody.response; // ✅ unwrap
-        expect(updated).toHaveProperty("archiveAsScreenshot", true); // USR-011
+        const updated = updateBody.response;
+        expect(updated).toHaveProperty("archiveAsScreenshot", true);
         expect(updated).toHaveProperty("archiveAsPDF", false);
 
         await authenticated.context.dispose();
+        stdout.write(`Created user: ${JSON.stringify(updateBody)}\n`);
     });
     
     test("USR-012: change locale to supported language", async ({ request, baseURL }) => {
         const uniqueUsername = `usr012-${randomUUID().slice(0, 8)}`;
         const password = "SecurePass123!";
-        const locale = "es";
+        const locale = "fr";
 
         const createResponse = await request.post("/api/v1/users", {
             data: {
@@ -221,7 +231,7 @@ test.describe("Users - Create Users", () => {
             `/api/v1/users/${userId}`,
             {
                 data: {
-                    username: uniqueUsername, // ✅ required by PUT schema
+                    username: uniqueUsername,
                     locale,
                 },
             }
@@ -229,10 +239,11 @@ test.describe("Users - Create Users", () => {
 
         expect(updateResponse.status()).toBe(200);
         const updateBody = await updateResponse.json();
-        const updated = updateBody.response; // ✅ unwrap
-        expect(updated).toHaveProperty("locale", locale);            // USR-012
+        const updated = updateBody.response;
+        expect(updated).toHaveProperty("locale", locale);
 
         await authenticated.context.dispose();
-    });
+        stdout.write(`Created user: ${JSON.stringify(updateBody)}\n`);
+    }); 
 
 });
